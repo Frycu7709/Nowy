@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statyczna Strona z Grą Snake</title>
+  <style>
+    /* Stylizacja całej strony */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      color: #333;
+    }
+    header {
+      background: rgba(255,255,255,0.8);
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    section {
+      margin-bottom: 40px;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      overflow-x: auto;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: #000;
+      border: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Statyczna Strona z Grą Snake</h1>
+  </header>
+  <div class="container">
+    <!-- Sekcja z instrukcjami krok po kroku -->
+    <section id="instructions">
+      <h2>Instrukcja krok po kroku</h2>
+      <ol>
+        <li>
+          <strong>Stwórz nowy projekt:</strong> Utwórz folder na swój projekt i w nim plik <code>index.html</code>.
+        </li>
+        <li>
+          <strong>Skopiuj poniższy kod:</strong> Skopiuj i wklej cały kod źródłowy do pliku <code>index.html</code>.
+        </li>
+        <li>
+          <strong>Hostowanie na GitHub Pages:</strong>
+          <ul>
+            <li>Utwórz nowe repozytorium na GitHubie.</li>
+            <li>Dodaj plik <code>index.html</code> do repozytorium.</li>
+            <li>Przejdź do ustawień repozytorium (Settings) i w sekcji "Pages" wybierz gałąź (np. <code>main</code>) oraz folder <code>root</code> jako źródło publikacji.</li>
+            <li>Po zapisaniu ustawień Twoja strona będzie dostępna pod adresem: <code>https://twoja-nazwa-uzytkownika.github.io/nazwa-repozytorium/</code></li>
+          </ul>
+        </li>
+        <li>
+          <strong>Dostęp z dowolnej lokalizacji:</strong> Strona hostowana na GitHub Pages jest dostępna z każdego miejsca, gdzie masz internet.
+        </li>
+        <li>
+          <strong>Gra Snake:</strong> Na dole strony znajdziesz grę Snake, którą możesz uruchomić i grać za pomocą klawiszy strzałek.
+        </li>
+      </ol>
+    </section>
+
+    <!-- Sekcja z grą Snake -->
+    <section id="snake-game">
+      <h2>Gra Snake</h2>
+      <canvas id="gameCanvas" width="400" height="400"></canvas>
+      <p style="text-align:center; margin-top:10px;">Sterowanie: Strzałki na klawiaturze</p>
+    </section>
+  </div>
+
+  <script>
+    // Implementacja gry Snake
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const gridSize = 20; // Rozmiar pojedynczej kratki
+    const tileCount = canvas.width / gridSize; // Liczba kratek w poziomie
+
+    // Początkowy stan węża (lista segmentów)
+    let snake = [{x: 10, y: 10}];
+    let dx = 0; // Kierunek poziomy (0 - brak ruchu, 1 - w prawo, -1 - w lewo)
+    let dy = 0; // Kierunek pionowy (0 - brak ruchu, 1 - w dół, -1 - w górę)
+
+    // Losowe umieszczenie jabłka
+    let apple = {
+      x: Math.floor(Math.random() * tileCount),
+      y: Math.floor(Math.random() * tileCount)
+    };
+
+    // Obsługa klawiatury – sterowanie strzałkami
+    document.addEventListener("keydown", function(e) {
+      switch(e.key) {
+        case "ArrowLeft":
+          if(dx !== 1) { dx = -1; dy = 0; }
+          break;
+        case "ArrowUp":
+          if(dy !== 1) { dx = 0; dy = -1; }
+          break;
+        case "ArrowRight":
+          if(dx !== -1) { dx = 1; dy = 0; }
+          break;
+        case "ArrowDown":
+          if(dy !== -1) { dx = 0; dy = 1; }
+          break;
+      }
+    });
+
+    // Główna pętla gry
+    function gameLoop() {
+      // Obliczenie nowej pozycji głowy węża
+      const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+      // Sprawdzenie kolizji ze ścianami
+      if(head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        resetGame();
+        return;
+      }
+      // Sprawdzenie kolizji z ciałem węża
+      for(let segment of snake) {
+        if(head.x === segment.x && head.y === segment.y) {
+          resetGame();
+          return;
+        }
+      }
+
+      // Dodanie nowej głowy do węża
+      snake.unshift(head);
+
+      // Sprawdzenie, czy wąż zjadł jabłko
+      if(head.x === apple.x && head.y === apple.y) {
+        // Generowanie nowego jabłka w losowej pozycji
+        apple.x = Math.floor(Math.random() * tileCount);
+        apple.y = Math.floor(Math.random() * tileCount);
+      } else {
+        // Usunięcie ostatniego segmentu, jeśli jabłko nie zostało zjedzone
+        snake.pop();
+      }
+
+      drawGame();
+    }
+
+    // Funkcja rysująca grę
+    function drawGame() {
+      // Wyczyść canvas
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Rysowanie jabłka
+      ctx.fillStyle = "#f00";
+      ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize - 2, gridSize - 2);
+
+      // Rysowanie węża
+      ctx.fillStyle = "#0f0";
+      for(let segment of snake) {
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+      }
+    }
+
+    // Resetowanie gry po kolizji
+    function resetGame() {
+      alert("Przegrałeś! Spróbuj ponownie.");
+      snake = [{x: 10, y: 10}];
+      dx = 0;
+      dy = 0;
+      apple.x = Math.floor(Math.random() * tileCount);
+      apple.y = Math.floor(Math.random() * tileCount);
+    }
+
+    // Uruchamianie gry – wywoływanie gameLoop co 100ms
+    setInterval(gameLoop, 100);
+  </script>
+</body>
+</html>

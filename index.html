@@ -1,201 +1,186 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gra Snake</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #4CAF50; /* Zielone tło */
-            font-family: Arial, sans-serif;
-            color: white;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        canvas {
-            border: 5px solid #000;
-            background-color: #FFF;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-        #controls {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .control-row {
-            display: flex;
-            justify-content: center;
-        }
-        .control {
-            width: 60px;
-            height: 60px;
-            background-color: #007BFF;
-            border: 1px solid #0056b3;
-            color: white;
-            font-size: 24px;
-            text-align: center;
-            line-height: 60px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s, transform 0.3s;
-        }
-        .control:hover {
-            background-color: #0056b3;
-            transform: scale(1.1);
-        }
-        .control:active {
-            background-color: #003f72;
-        }
-        #gameOver {
-            display: none;
-            font-size: 24px;
-            color: red;
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gra Snake</title>
+  <style>
+    body {
+      background-color: #333;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+    canvas {
+      background-color: #000;
+      display: block;
+      margin: 20px auto;
+      border: 5px solid #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      width: 200px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .controls button {
+      width: 60px;
+      height: 60px;
+      margin: 5px;
+      font-size: 24px;
+      border: none;
+      border-radius: 5px;
+      background-color: #555;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .controls button:hover {
+      background-color: #777;
+    }
+    .controls button:active {
+      background-color: #999;
+    }
+    #message {
+      font-size: 18px;
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Gra Snake</h1>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <h2 id="gameOver">Przegrałeś! Naciśnij "R", aby zagrać ponownie.</h2>
-        <div id="controls">
-            <div class="control-row">
-                <div class="control" onclick="changeDirection('UP')">↑</div>
-            </div>
-            <div class="control-row">
-                <div class="control" onclick="changeDirection('LEFT')">←</div>
-                <div class="control" onclick="changeDirection('DOWN')">↓</div>
-                <div class="control" onclick="changeDirection('RIGHT')">→</div>
-            </div>
-        </div>
-    </div>
+  <h1>Gra Snake</h1>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <div class="controls">
+    <button id="btn-up">↑</button>
+    <button id="btn-left">←</button>
+    <button id="btn-down">↓</button>
+    <button id="btn-right">→</button>
+  </div>
+  <div id="message"></div>
+  
+  <script>
+    // Ustawienia gry
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+    const cellSize = 20;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const cellsX = canvasWidth / cellSize;
+    const cellsY = canvasHeight / cellSize;
 
-        const box = 20;
-        let snake = [{ x: box * 5, y: box * 5 }];
-        let direction = 'RIGHT';
-        let food = spawnFood();
-        let gameOver = false;
+    let snake = [{ x: Math.floor(cellsX/2), y: Math.floor(cellsY/2) }];
+    let direction = "RIGHT"; // Domyślnie wąż idzie w prawo
+    let food = spawnFood();
+    let gameOver = false;
+    let gameInterval = setInterval(update, 150);
 
-        // Obsługuje zarówno klawiaturę, jak i przyciski dotykowe
-        document.addEventListener('keydown', (event) => {
-            if (!gameOver) {
-                switch (event.key) {
-                    case 'ArrowUp':
-                        if (direction !== 'DOWN') direction = 'UP';
-                        break;
-                    case 'ArrowDown':
-                        if (direction !== 'UP') direction = 'DOWN';
-                        break;
-                    case 'ArrowLeft':
-                        if (direction !== 'RIGHT') direction = 'LEFT';
-                        break;
-                    case 'ArrowRight':
-                        if (direction !== 'LEFT') direction = 'RIGHT';
-                        break;
-                    case 'r':
-                        restartGame();
-                        break;
-                }
-            }
-        });
+    // Funkcja generująca jedzenie w losowym miejscu
+    function spawnFood() {
+      return {
+        x: Math.floor(Math.random() * cellsX),
+        y: Math.floor(Math.random() * cellsY)
+      };
+    }
 
-        function changeDirection(dir) {
-            if (!gameOver) {
-                if (dir === 'UP' && direction !== 'DOWN') direction = 'UP';
-                if (dir === 'DOWN' && direction !== 'UP') direction = 'DOWN';
-                if (dir === 'LEFT' && direction !== 'RIGHT') direction = 'LEFT';
-                if (dir === 'RIGHT' && direction !== 'LEFT') direction = 'RIGHT';
-            }
+    // Rysowanie elementów gry
+    function draw() {
+      // Czyścimy planszę
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      // Rysujemy jedzenie
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x * cellSize, food.y * cellSize, cellSize, cellSize);
+
+      // Rysujemy węża
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = (i === 0) ? "lime" : "green";
+        ctx.fillRect(snake[i].x * cellSize, snake[i].y * cellSize, cellSize, cellSize);
+      }
+    }
+
+    // Aktualizacja stanu gry
+    function update() {
+      if (gameOver) return;
+
+      let head = { x: snake[0].x, y: snake[0].y };
+
+      // Aktualizujemy pozycję głowy na podstawie kierunku
+      if (direction === "RIGHT") head.x++;
+      else if (direction === "LEFT") head.x--;
+      else if (direction === "UP") head.y--;
+      else if (direction === "DOWN") head.y++;
+
+      // Sprawdzamy kolizję ze ścianami
+      if (head.x < 0 || head.x >= cellsX || head.y < 0 || head.y >= cellsY) {
+        endGame();
+        return;
+      }
+
+      // Sprawdzamy kolizję z ciałem węża
+      for (let i = 0; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          endGame();
+          return;
         }
+      }
 
-        function spawnFood() {
-            return {
-                x: Math.floor(Math.random() * (canvas.width / box)) * box,
-                y: Math.floor(Math.random() * (canvas.height / box)) * box
-            };
-        }
+      // Dodajemy nową głowę
+      snake.unshift(head);
 
-        function draw() {
-            if (gameOver) return;
+      // Jeśli zjedzono jedzenie
+      if (head.x === food.x && head.y === food.y) {
+        food = spawnFood();
+      } else {
+        // Usuwamy ogon
+        snake.pop();
+      }
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+      draw();
+    }
 
-            // Rysowanie węża
-            for (let i = 0; i < snake.length; i++) {
-                ctx.fillStyle = (i === 0) ? 'green' : 'lightgreen';
-                ctx.fillRect(snake[i].x, snake[i].y, box, box);
-                ctx.strokeStyle = 'darkgreen';
-                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
-            }
+    // Funkcja kończąca grę
+    function endGame() {
+      gameOver = true;
+      clearInterval(gameInterval);
+      document.getElementById("message").innerText = "Przegrałeś! Odśwież stronę, aby zagrać ponownie.";
+    }
 
-            // Rysowanie jedzenia
-            ctx.fillStyle = 'red';
-            ctx.fillRect(food.x, food.y, box, box);
+    // Zmiana kierunku – nie pozwala na cofanie
+    function changeDirection(newDir) {
+      if (newDir === "LEFT" && direction === "RIGHT") return;
+      if (newDir === "RIGHT" && direction === "LEFT") return;
+      if (newDir === "UP" && direction === "DOWN") return;
+      if (newDir === "DOWN" && direction === "UP") return;
+      direction = newDir;
+    }
 
-            // Poruszanie wężem
-            let headX = snake[0].x;
-            let headY = snake[0].y;
+    // Obsługa zdarzeń klawiatury
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "ArrowUp") changeDirection("UP");
+      else if (e.key === "ArrowDown") changeDirection("DOWN");
+      else if (e.key === "ArrowLeft") changeDirection("LEFT");
+      else if (e.key === "ArrowRight") changeDirection("RIGHT");
+    });
 
-            if (headX === food.x && headY === food.y) {
-                food = spawnFood();
-            } else {
-                snake.pop();
-            }
-
-            if (direction === 'LEFT') headX -= box;
-            if (direction === 'UP') headY -= box;
-            if (direction === 'RIGHT') headX += box;
-            if (direction === 'DOWN') headY += box;
-
-            const newHead = { x: headX, y: headY };
-
-            if (collision(newHead)) {
-                gameOver = true;
-                document.getElementById('gameOver').style.display = 'block';
-            } else {
-                snake.unshift(newHead);
-            }
-
-            requestAnimationFrame(draw);
-        }
-
-        function collision(head) {
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) return true;
-            for (let i = 1; i < snake.length; i++) {
-                if (head.x === snake[i].x && head.y === snake[i].y) return true;
-            }
-            return false;
-        }
-
-        function restartGame() {
-            snake = [{ x: box * 5, y: box * 5 }];
-            direction = 'RIGHT';
-            food = spawnFood();
-            gameOver = false;
-            document.getElementById('gameOver').style.display = 'none';
-            draw();
-        }
-
-        draw();
-    </script>
+    // Obsługa przycisków na ekranie
+    document.getElementById("btn-up").addEventListener("click", () => changeDirection("UP"));
+    document.getElementById("btn-down").addEventListener("click", () => changeDirection("DOWN"));
+    document.getElementById("btn-left").addEventListener("click", () => changeDirection("LEFT"));
+    document.getElementById("btn-right").addEventListener("click", () => changeDirection("RIGHT"));
+  </script>
 </body>
 </html>

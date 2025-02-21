@@ -11,12 +11,19 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #282c34;
+            color: white;
             font-family: Arial, sans-serif;
+            margin: 0;
         }
         canvas {
-            border: 1px solid #000;
+            border: 2px solid #61dafb;
             background-color: #fff;
+        }
+        h1 {
+            margin: 10px;
+            font-size: 2em;
+            color: #61dafb;
         }
         #controls {
             margin-top: 10px;
@@ -27,23 +34,35 @@
         .control {
             width: 60px;
             height: 60px;
-            background-color: #ddd;
-            border: 1px solid #000;
+            background-color: #61dafb;
+            border: none;
+            border-radius: 10px;
             text-align: center;
             line-height: 60px;
             font-size: 24px;
+            color: black;
             cursor: pointer;
             margin: 5px;
+            transition: background-color 0.3s;
+        }
+        .control:hover {
+            background-color: #21a1f1;
         }
         .control-row {
             display: flex;
+        }
+        #gameOver {
+            display: none;
+            font-size: 1.5em;
+            margin-top: 20px;
+            color: #ff6347;
         }
     </style>
 </head>
 <body>
     <h1>Gra Snake</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <h2 id="gameOver" style="display:none;">Przegrałeś! Naciśnij "R", aby zagrać ponownie.</h2>
+    <h2 id="gameOver">Przegrałeś! Naciśnij "R", aby zagrać ponownie.</h2>
     <div id="controls">
         <div class="control-row">
             <div class="control" onclick="changeDirection('UP')">↑</div>
@@ -67,7 +86,7 @@
 
         document.addEventListener('keydown', (event) => {
             if (!gameOver) changeDirection(event.key.replace('Arrow', ''));
-            if (gameOver && event.key === 'r') restartGame();
+            if (gameOver && event.key.toLowerCase() === 'r') restartGame();
         });
 
         function changeDirection(dir) {
@@ -89,13 +108,13 @@
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < snake.length; i++) {
-                ctx.fillStyle = (i === 0) ? 'green' : 'lightgreen';
+                ctx.fillStyle = (i === 0) ? '#228B22' : '#90EE90';
                 ctx.fillRect(snake[i].x, snake[i].y, box, box);
-                ctx.strokeStyle = 'darkgreen';
+                ctx.strokeStyle = '#006400';
                 ctx.strokeRect(snake[i].x, snake[i].y, box, box);
             }
 
-            ctx.fillStyle = 'red';
+            ctx.fillStyle = '#FF4500';
             ctx.fillRect(food.x, food.y, box, box);
 
             const headX = snake[0].x;

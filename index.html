@@ -18,12 +18,33 @@
             border: 1px solid #000;
             background-color: #fff;
         }
+        #controls {
+            margin-top: 10px;
+        }
+        .control {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            background-color: #ddd;
+            border: 1px solid #000;
+            display: inline-block;
+            text-align: center;
+            line-height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <h1>Gra Snake</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <h2 id="gameOver" style="display:none;">Przegrałeś! Naciśnij "R", aby zagrać ponownie.</h2>
+    <div id="controls">
+        <div class="control" onclick="changeDirection('UP')">↑</div>
+        <div class="control" onclick="changeDirection('LEFT')">←</div>
+        <div class="control" onclick="changeDirection('DOWN')">↓</div>
+        <div class="control" onclick="changeDirection('RIGHT')">→</div>
+    </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -35,19 +56,16 @@
         let score = 0;
         let gameOver = false;
 
-        document.addEventListener('keydown', changeDirection);
-        document.addEventListener('touchstart', function(event) {
-            event.preventDefault();
-            changeDirection(event.touches[0]);
+        document.addEventListener('keydown', (event) => {
+            if (!gameOver) changeDirection(event.key.replace('Arrow', ''));
+            if (gameOver && event.key === 'r') restartGame();
         });
 
-        function changeDirection(event) {
-            const key = event.key || event.targetTouches[0].clientY;
-            if (key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
-            if (key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
-            if (key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
-            if (key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
-            if (gameOver && key === 'r') restartGame();
+        function changeDirection(dir) {
+            if (dir === 'Up' && direction !== 'DOWN') direction = 'UP';
+            if (dir === 'Down' && direction !== 'UP') direction = 'DOWN';
+            if (dir === 'Left' && direction !== 'RIGHT') direction = 'LEFT';
+            if (dir === 'Right' && direction !== 'LEFT') direction = 'RIGHT';
         }
 
         function spawnFood() {

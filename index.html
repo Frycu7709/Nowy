@@ -34,7 +34,7 @@
       justify-content: center;
       margin-bottom: 20px;
     }
-    .controls button {
+    .controls button, #restartButton {
       width: 60px;
       height: 60px;
       margin: 5px;
@@ -46,15 +46,14 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    .controls button:hover {
+    .controls button:hover, #restartButton:hover {
       background-color: #777;
     }
-    .controls button:active {
+    .controls button:active, #restartButton:active {
       background-color: #999;
     }
-    #message {
-      font-size: 18px;
-      color: red;
+    #restartButton {
+      display: none;
       margin-top: 10px;
     }
   </style>
@@ -68,7 +67,7 @@
     <button id="btn-down">↓</button>
     <button id="btn-right">→</button>
   </div>
-  <div id="message"></div>
+  <button id="restartButton">Restart</button>
   
   <script>
     // Ustawienia gry
@@ -81,11 +80,12 @@
     const cellsX = canvasWidth / cellSize;
     const cellsY = canvasHeight / cellSize;
 
-    let snake = [{ x: Math.floor(cellsX/2), y: Math.floor(cellsY/2) }];
-    let direction = "RIGHT"; // Domyślnie wąż idzie w prawo
+    let snake = [{ x: Math.floor(cellsX / 2), y: Math.floor(cellsY / 2) }];
+    let direction = "RIGHT"; // wąż zaczyna poruszać się w prawo
     let food = spawnFood();
     let gameOver = false;
-    let gameInterval = setInterval(update, 150);
+    // Zmniejszona prędkość – aktualizacja co 200ms
+    let gameInterval = setInterval(update, 200);
 
     // Funkcja generująca jedzenie w losowym miejscu
     function spawnFood() {
@@ -97,15 +97,14 @@
 
     // Rysowanie elementów gry
     function draw() {
-      // Czyścimy planszę
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-      // Rysujemy jedzenie
+      // Rysowanie jedzenia
       ctx.fillStyle = "red";
       ctx.fillRect(food.x * cellSize, food.y * cellSize, cellSize, cellSize);
 
-      // Rysujemy węża
+      // Rysowanie węża
       for (let i = 0; i < snake.length; i++) {
         ctx.fillStyle = (i === 0) ? "lime" : "green";
         ctx.fillRect(snake[i].x * cellSize, snake[i].y * cellSize, cellSize, cellSize);
@@ -118,19 +117,19 @@
 
       let head = { x: snake[0].x, y: snake[0].y };
 
-      // Aktualizujemy pozycję głowy na podstawie kierunku
+      // Aktualizacja pozycji głowy na podstawie kierunku
       if (direction === "RIGHT") head.x++;
       else if (direction === "LEFT") head.x--;
       else if (direction === "UP") head.y--;
       else if (direction === "DOWN") head.y++;
 
-      // Sprawdzamy kolizję ze ścianami
+      // Sprawdzanie kolizji ze ścianami
       if (head.x < 0 || head.x >= cellsX || head.y < 0 || head.y >= cellsY) {
         endGame();
         return;
       }
 
-      // Sprawdzamy kolizję z ciałem węża
+      // Sprawdzanie kolizji z ciałem węża
       for (let i = 0; i < snake.length; i++) {
         if (head.x === snake[i].x && head.y === snake[i].y) {
           endGame();
@@ -138,37 +137,37 @@
         }
       }
 
-      // Dodajemy nową głowę
       snake.unshift(head);
 
-      // Jeśli zjedzono jedzenie
+      // Jeśli wąż zjadł jedzenie, generujemy nowe; w przeciwnym razie usuwamy ogon
       if (head.x === food.x && head.y === food.y) {
         food = spawnFood();
       } else {
-        // Usuwamy ogon
         snake.pop();
       }
 
       draw();
     }
 
-    // Funkcja kończąca grę
+    // Funkcja kończąca grę – wyświetla przycisk restart
     function endGame() {
       gameOver = true;
       clearInterval(gameInterval);
-      document.getElementById("message").innerText = "Przegrałeś! Odśwież stronę, aby zagrać ponownie.";
+      document.getElementById("restartButton").style.display = "block";
     }
 
-    // Zmiana kierunku – nie pozwala na cofanie
+    // Zmiana kierunku – zapobiega cofnięciu
     function changeDirection(newDir) {
-      if (newDir === "LEFT" && direction === "RIGHT") return;
-      if (newDir === "RIGHT" && direction === "LEFT") return;
-      if (newDir === "UP" && direction === "DOWN") return;
-      if (newDir === "DOWN" && direction === "UP") return;
+      if ((newDir === "LEFT" && direction === "RIGHT") ||
+          (newDir === "RIGHT" && direction === "LEFT") ||
+          (newDir === "UP" && direction === "DOWN") ||
+          (newDir === "DOWN" && direction === "UP")) {
+        return;
+      }
       direction = newDir;
     }
 
-    // Obsługa zdarzeń klawiatury
+    // Obsługa klawiatury
     document.addEventListener("keydown", function(e) {
       if (e.key === "ArrowUp") changeDirection("UP");
       else if (e.key === "ArrowDown") changeDirection("DOWN");
@@ -176,11 +175,26 @@
       else if (e.key === "ArrowRight") changeDirection("RIGHT");
     });
 
-    // Obsługa przycisków na ekranie
+    // Obsługa przycisków sterujących
     document.getElementById("btn-up").addEventListener("click", () => changeDirection("UP"));
     document.getElementById("btn-down").addEventListener("click", () => changeDirection("DOWN"));
     document.getElementById("btn-left").addEventListener("click", () => changeDirection("LEFT"));
     document.getElementById("btn-right").addEventListener("click", () => changeDirection("RIGHT"));
+
+    // Obsługa przycisku restart
+    document.getElementById("restartButton").addEventListener("click", restartGame);
+
+    // Restart gry
+    function restartGame() {
+      snake = [{ x: Math.floor(cellsX / 2), y: Math.floor(cellsY / 2) }];
+      direction = "RIGHT";
+      food = spawnFood();
+      gameOver = false;
+      document.getElementById("restartButton").style.display = "none";
+      gameInterval = setInterval(update, 200);
+    }
+
+    draw();
   </script>
 </body>
 </html>

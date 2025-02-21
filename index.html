@@ -84,7 +84,8 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-      border-radius: 5px;
+      border: 10px solid #bbada0;
+      border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
     #game2048Board .cell {
@@ -94,8 +95,10 @@
       justify-content: center;
       font-size: 24px;
       font-weight: bold;
-      border-radius: 3px;
+      border-radius: 5px;
       user-select: none;
+      border: 2px solid #bbada0;
+      transition: background-color 0.3s;
     }
     .controls2048 {
       margin-top: 20px;
@@ -126,7 +129,7 @@
       font-size: 20px;
       color: #f00;
     }
-    /* Opcjonalne klasy komórek 2048 */
+    /* Ulepszone kolory kafelków wg oficjalnej gry 2048 */
     .cell-2 { background-color: #eee4da; color: #776e65; }
     .cell-4 { background-color: #ede0c8; color: #776e65; }
     .cell-8 { background-color: #f2b179; color: #f9f6f2; }
@@ -234,7 +237,7 @@
       else if (snakeDirection === "UP") head.y--;
       else if (snakeDirection === "DOWN") head.y++;
 
-      // Sprawdzenie kolizji (ściany lub własne ciało)
+      // Sprawdzenie kolizji (ściany lub ciało)
       if (
         head.x < 0 || head.x >= snakeCellsX ||
         head.y < 0 || head.y >= snakeCellsY ||
@@ -333,6 +336,7 @@
         for (let j = 0; j < boardSize; j++) {
           let cell = document.getElementById(`cell-${i}-${j}`);
           cell.innerText = board2048[i][j] === 0 ? "" : board2048[i][j];
+          // Aktualizacja klasy komórki, aby używała lepszych kolorów i obramowania
           cell.className = "cell " + (board2048[i][j] ? "cell-" + board2048[i][j] : "cell-0");
         }
       }
@@ -428,7 +432,7 @@
       }
     }
 
-    // Keyboard controls for 2048 (działa gdy widoczny jest panel gry 2048)
+    // Keyboard controls for 2048
     document.addEventListener("keydown", function(e) {
       if (game2048.classList.contains("active") && !gameOver2048) {
         switch(e.key) {

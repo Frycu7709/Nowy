@@ -3,38 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gra Snake</title>
+  <title>Gry: Snake i 2048</title>
   <style>
+    /* Globalne style */
     body {
-      background-color: #333;
-      color: #fff;
+      margin: 0;
       font-family: sans-serif;
+      background-color: #222;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+      min-height: 100vh;
     }
-    h1 {
-      margin-top: 20px;
-      margin-bottom: 10px;
-    }
-    canvas {
-      background-color: #000;
-      display: block;
-      margin: 20px auto;
-      border: 5px solid #fff;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    }
-    .controls {
+    header {
+      width: 100%;
+      background-color: #444;
+      padding: 10px;
       display: flex;
-      flex-wrap: wrap;
-      width: 200px;
       justify-content: center;
-      margin-bottom: 20px;
+      gap: 20px;
     }
-    .controls button, #restartButton {
+    header button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #666;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    header button.active {
+      background-color: #008CBA;
+    }
+    .game-container {
+      flex: 1;
+      width: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+    .game-container.active {
+      display: flex;
+    }
+    /* Snake game styles */
+    #snakeCanvas {
+      background-color: #000;
+      border: 5px solid #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .snake-controls, #snake-restart {
+      margin-top: 20px;
+    }
+    .snake-controls button, #snake-restart {
       width: 60px;
       height: 60px;
       margin: 5px;
@@ -46,155 +69,398 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    .controls button:hover, #restartButton:hover {
+    .snake-controls button:hover, #snake-restart:hover {
       background-color: #777;
     }
-    .controls button:active, #restartButton:active {
+    .snake-controls button:active, #snake-restart:active {
       background-color: #999;
     }
-    #restartButton {
-      display: none;
-      margin-top: 10px;
+    /* 2048 game styles */
+    #game2048Board {
+      width: 400px;
+      height: 400px;
+      background-color: #bbada0;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
+    #game2048Board .cell {
+      background-color: #cdc1b4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      border-radius: 3px;
+      user-select: none;
+    }
+    .controls2048 {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .controls2048 button {
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      border: none;
+      border-radius: 5px;
+      background-color: #555;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .controls2048 button:hover {
+      background-color: #777;
+    }
+    .controls2048 button:active {
+      background-color: #999;
+    }
+    .game2048-message {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #f00;
+    }
+    /* Opcjonalne klasy komórek 2048 */
+    .cell-2 { background-color: #eee4da; color: #776e65; }
+    .cell-4 { background-color: #ede0c8; color: #776e65; }
+    .cell-8 { background-color: #f2b179; color: #f9f6f2; }
+    .cell-16 { background-color: #f59563; color: #f9f6f2; }
+    .cell-32 { background-color: #f67c5f; color: #f9f6f2; }
+    .cell-64 { background-color: #f65e3b; color: #f9f6f2; }
+    .cell-128 { background-color: #edcf72; color: #f9f6f2; }
+    .cell-256 { background-color: #edcc61; color: #f9f6f2; }
+    .cell-512 { background-color: #edc850; color: #f9f6f2; }
+    .cell-1024 { background-color: #edc53f; color: #f9f6f2; }
+    .cell-2048 { background-color: #edc22e; color: #f9f6f2; }
   </style>
 </head>
 <body>
-  <h1>Gra Snake</h1>
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
-  <div class="controls">
-    <button id="btn-up">↑</button>
-    <button id="btn-left">←</button>
-    <button id="btn-down">↓</button>
-    <button id="btn-right">→</button>
+  <header>
+    <button id="btnSnake" class="active">Snake</button>
+    <button id="btn2048">2048</button>
+  </header>
+
+  <!-- Snake Game Container -->
+  <div id="snakeGame" class="game-container active">
+    <h1>Gra Snake</h1>
+    <canvas id="snakeCanvas" width="400" height="400"></canvas>
+    <div class="snake-controls">
+      <button id="snake-up">↑</button>
+      <button id="snake-left">←</button>
+      <button id="snake-down">↓</button>
+      <button id="snake-right">→</button>
+    </div>
+    <button id="snake-restart" style="display:none;">Restart</button>
   </div>
-  <button id="restartButton">Restart</button>
-  
+
+  <!-- 2048 Game Container -->
+  <div id="game2048" class="game-container">
+    <h1>Gra 2048</h1>
+    <div id="game2048Board"></div>
+    <div class="controls2048">
+      <button id="btn2048-up">↑</button>
+      <button id="btn2048-left">←</button>
+      <button id="btn2048-down">↓</button>
+      <button id="btn2048-right">→</button>
+    </div>
+    <div class="game2048-message" id="game2048Message"></div>
+  </div>
+
   <script>
-    // Ustawienia gry
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    /* ===== Przełączanie gier (zakładki) ===== */
+    const btnSnake = document.getElementById("btnSnake");
+    const btn2048 = document.getElementById("btn2048");
+    const snakeGame = document.getElementById("snakeGame");
+    const game2048 = document.getElementById("game2048");
 
-    const cellSize = 20;
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const cellsX = canvasWidth / cellSize;
-    const cellsY = canvasHeight / cellSize;
+    btnSnake.addEventListener("click", () => {
+      btnSnake.classList.add("active");
+      btn2048.classList.remove("active");
+      snakeGame.classList.add("active");
+      game2048.classList.remove("active");
+    });
 
-    let snake = [{ x: Math.floor(cellsX / 2), y: Math.floor(cellsY / 2) }];
-    let direction = "RIGHT"; // wąż zaczyna poruszać się w prawo
-    let food = spawnFood();
-    let gameOver = false;
-    // Zmniejszona prędkość – aktualizacja co 200ms
-    let gameInterval = setInterval(update, 200);
+    btn2048.addEventListener("click", () => {
+      btn2048.classList.add("active");
+      btnSnake.classList.remove("active");
+      game2048.classList.add("active");
+      snakeGame.classList.remove("active");
+      init2048();
+    });
 
-    // Funkcja generująca jedzenie w losowym miejscu
-    function spawnFood() {
+    /* ======== KOD GRY SNAKE ======== */
+    const snakeCanvas = document.getElementById("snakeCanvas");
+    const snakeCtx = snakeCanvas.getContext("2d");
+    const snakeCellSize = 20;
+    const snakeCellsX = snakeCanvas.width / snakeCellSize;
+    const snakeCellsY = snakeCanvas.height / snakeCellSize;
+    let snake = [{ x: Math.floor(snakeCellsX / 2), y: Math.floor(snakeCellsY / 2) }];
+    let snakeDirection = "RIGHT";
+    let snakeFood = spawnSnakeFood();
+    let snakeGameOver = false;
+    let snakeInterval = setInterval(updateSnake, 200);
+
+    function spawnSnakeFood() {
       return {
-        x: Math.floor(Math.random() * cellsX),
-        y: Math.floor(Math.random() * cellsY)
+        x: Math.floor(Math.random() * snakeCellsX),
+        y: Math.floor(Math.random() * snakeCellsY)
       };
     }
 
-    // Rysowanie elementów gry
-    function draw() {
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
+    function drawSnake() {
+      snakeCtx.fillStyle = "#000";
+      snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
       // Rysowanie jedzenia
-      ctx.fillStyle = "red";
-      ctx.fillRect(food.x * cellSize, food.y * cellSize, cellSize, cellSize);
-
+      snakeCtx.fillStyle = "red";
+      snakeCtx.fillRect(snakeFood.x * snakeCellSize, snakeFood.y * snakeCellSize, snakeCellSize, snakeCellSize);
       // Rysowanie węża
-      for (let i = 0; i < snake.length; i++) {
-        ctx.fillStyle = (i === 0) ? "lime" : "green";
-        ctx.fillRect(snake[i].x * cellSize, snake[i].y * cellSize, cellSize, cellSize);
-      }
+      snake.forEach((segment, index) => {
+        snakeCtx.fillStyle = index === 0 ? "lime" : "green";
+        snakeCtx.fillRect(segment.x * snakeCellSize, segment.y * snakeCellSize, snakeCellSize, snakeCellSize);
+      });
     }
 
-    // Aktualizacja stanu gry
-    function update() {
-      if (gameOver) return;
-
+    function updateSnake() {
+      if (snakeGameOver) return;
       let head = { x: snake[0].x, y: snake[0].y };
+      if (snakeDirection === "RIGHT") head.x++;
+      else if (snakeDirection === "LEFT") head.x--;
+      else if (snakeDirection === "UP") head.y--;
+      else if (snakeDirection === "DOWN") head.y++;
 
-      // Aktualizacja pozycji głowy na podstawie kierunku
-      if (direction === "RIGHT") head.x++;
-      else if (direction === "LEFT") head.x--;
-      else if (direction === "UP") head.y--;
-      else if (direction === "DOWN") head.y++;
-
-      // Sprawdzanie kolizji ze ścianami
-      if (head.x < 0 || head.x >= cellsX || head.y < 0 || head.y >= cellsY) {
-        endGame();
+      // Sprawdzenie kolizji (ściany lub własne ciało)
+      if (
+        head.x < 0 || head.x >= snakeCellsX ||
+        head.y < 0 || head.y >= snakeCellsY ||
+        snake.some(segment => segment.x === head.x && segment.y === head.y)
+      ) {
+        endSnakeGame();
         return;
       }
-
-      // Sprawdzanie kolizji z ciałem węża
-      for (let i = 0; i < snake.length; i++) {
-        if (head.x === snake[i].x && head.y === snake[i].y) {
-          endGame();
-          return;
-        }
-      }
-
       snake.unshift(head);
-
-      // Jeśli wąż zjadł jedzenie, generujemy nowe; w przeciwnym razie usuwamy ogon
-      if (head.x === food.x && head.y === food.y) {
-        food = spawnFood();
+      if (head.x === snakeFood.x && head.y === snakeFood.y) {
+        snakeFood = spawnSnakeFood();
       } else {
         snake.pop();
       }
-
-      draw();
+      drawSnake();
     }
 
-    // Funkcja kończąca grę – wyświetla przycisk restart
-    function endGame() {
-      gameOver = true;
-      clearInterval(gameInterval);
-      document.getElementById("restartButton").style.display = "block";
+    function endSnakeGame() {
+      snakeGameOver = true;
+      clearInterval(snakeInterval);
+      document.getElementById("snake-restart").style.display = "block";
     }
 
-    // Zmiana kierunku – zapobiega cofnięciu
-    function changeDirection(newDir) {
-      if ((newDir === "LEFT" && direction === "RIGHT") ||
-          (newDir === "RIGHT" && direction === "LEFT") ||
-          (newDir === "UP" && direction === "DOWN") ||
-          (newDir === "DOWN" && direction === "UP")) {
-        return;
+    function restartSnakeGame() {
+      snake = [{ x: Math.floor(snakeCellsX / 2), y: Math.floor(snakeCellsY / 2) }];
+      snakeDirection = "RIGHT";
+      snakeFood = spawnSnakeFood();
+      snakeGameOver = false;
+      document.getElementById("snake-restart").style.display = "none";
+      snakeInterval = setInterval(updateSnake, 200);
+    }
+
+    // Obsługa klawiatury dla Snake
+    document.addEventListener("keydown", (e) => {
+      if (snakeGameOver) return;
+      switch(e.key) {
+        case "ArrowUp":
+          if (snakeDirection !== "DOWN") snakeDirection = "UP";
+          break;
+        case "ArrowDown":
+          if (snakeDirection !== "UP") snakeDirection = "DOWN";
+          break;
+        case "ArrowLeft":
+          if (snakeDirection !== "RIGHT") snakeDirection = "LEFT";
+          break;
+        case "ArrowRight":
+          if (snakeDirection !== "LEFT") snakeDirection = "RIGHT";
+          break;
       }
-      direction = newDir;
-    }
-
-    // Obsługa klawiatury
-    document.addEventListener("keydown", function(e) {
-      if (e.key === "ArrowUp") changeDirection("UP");
-      else if (e.key === "ArrowDown") changeDirection("DOWN");
-      else if (e.key === "ArrowLeft") changeDirection("LEFT");
-      else if (e.key === "ArrowRight") changeDirection("RIGHT");
     });
 
-    // Obsługa przycisków sterujących
-    document.getElementById("btn-up").addEventListener("click", () => changeDirection("UP"));
-    document.getElementById("btn-down").addEventListener("click", () => changeDirection("DOWN"));
-    document.getElementById("btn-left").addEventListener("click", () => changeDirection("LEFT"));
-    document.getElementById("btn-right").addEventListener("click", () => changeDirection("RIGHT"));
+    // Onscreen controls for Snake
+    document.getElementById("snake-up").addEventListener("click", () => { if (snakeDirection !== "DOWN") snakeDirection = "UP"; });
+    document.getElementById("snake-down").addEventListener("click", () => { if (snakeDirection !== "UP") snakeDirection = "DOWN"; });
+    document.getElementById("snake-left").addEventListener("click", () => { if (snakeDirection !== "RIGHT") snakeDirection = "LEFT"; });
+    document.getElementById("snake-right").addEventListener("click", () => { if (snakeDirection !== "LEFT") snakeDirection = "RIGHT"; });
+    document.getElementById("snake-restart").addEventListener("click", restartSnakeGame);
 
-    // Obsługa przycisku restart
-    document.getElementById("restartButton").addEventListener("click", restartGame);
+    /* ======== KOD GRY 2048 ======== */
+    let board2048 = [];
+    const boardSize = 4;
+    let gameOver2048 = false;
 
-    // Restart gry
-    function restartGame() {
-      snake = [{ x: Math.floor(cellsX / 2), y: Math.floor(cellsY / 2) }];
-      direction = "RIGHT";
-      food = spawnFood();
-      gameOver = false;
-      document.getElementById("restartButton").style.display = "none";
-      gameInterval = setInterval(update, 200);
+    function init2048() {
+      gameOver2048 = false;
+      document.getElementById("game2048Message").innerText = "";
+      board2048 = [];
+      for (let i = 0; i < boardSize; i++) {
+        board2048[i] = [];
+        for (let j = 0; j < boardSize; j++) {
+          board2048[i][j] = 0;
+        }
+      }
+      addRandomTile2048();
+      addRandomTile2048();
+      update2048Board();
     }
 
-    draw();
+    function addRandomTile2048() {
+      let emptyTiles = [];
+      for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+          if (board2048[i][j] === 0) {
+            emptyTiles.push({ i, j });
+          }
+        }
+      }
+      if (emptyTiles.length > 0) {
+        let randTile = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+        board2048[randTile.i][randTile.j] = Math.random() < 0.9 ? 2 : 4;
+      }
+    }
+
+    function update2048Board() {
+      for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+          let cell = document.getElementById(`cell-${i}-${j}`);
+          cell.innerText = board2048[i][j] === 0 ? "" : board2048[i][j];
+          cell.className = "cell " + (board2048[i][j] ? "cell-" + board2048[i][j] : "cell-0");
+        }
+      }
+    }
+
+    function slide(row) {
+      let arr = row.filter(val => val !== 0);
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i] === arr[i + 1]) {
+          arr[i] *= 2;
+          arr[i + 1] = 0;
+        }
+      }
+      arr = arr.filter(val => val !== 0);
+      while (arr.length < boardSize) {
+        arr.push(0);
+      }
+      return arr;
+    }
+
+    function moveLeft2048() {
+      let oldBoard = JSON.stringify(board2048);
+      for (let i = 0; i < boardSize; i++) {
+        board2048[i] = slide(board2048[i]);
+      }
+      if (JSON.stringify(board2048) !== oldBoard) {
+        addRandomTile2048();
+      }
+      update2048Board();
+      checkGameOver2048();
+    }
+
+    function moveRight2048() {
+      let oldBoard = JSON.stringify(board2048);
+      for (let i = 0; i < boardSize; i++) {
+        board2048[i] = board2048[i].reverse();
+        board2048[i] = slide(board2048[i]);
+        board2048[i] = board2048[i].reverse();
+      }
+      if (JSON.stringify(board2048) !== oldBoard) {
+        addRandomTile2048();
+      }
+      update2048Board();
+      checkGameOver2048();
+    }
+
+    function moveUp2048() {
+      let oldBoard = JSON.stringify(board2048);
+      board2048 = transpose(board2048);
+      for (let i = 0; i < boardSize; i++) {
+        board2048[i] = slide(board2048[i]);
+      }
+      board2048 = transpose(board2048);
+      if (JSON.stringify(board2048) !== oldBoard) {
+        addRandomTile2048();
+      }
+      update2048Board();
+      checkGameOver2048();
+    }
+
+    function moveDown2048() {
+      let oldBoard = JSON.stringify(board2048);
+      board2048 = transpose(board2048);
+      for (let i = 0; i < boardSize; i++) {
+        board2048[i] = board2048[i].reverse();
+        board2048[i] = slide(board2048[i]);
+        board2048[i] = board2048[i].reverse();
+      }
+      board2048 = transpose(board2048);
+      if (JSON.stringify(board2048) !== oldBoard) {
+        addRandomTile2048();
+      }
+      update2048Board();
+      checkGameOver2048();
+    }
+
+    function transpose(matrix) {
+      return matrix[0].map((_, i) => matrix.map(row => row[i]));
+    }
+
+    function checkGameOver2048() {
+      let movesAvailable = false;
+      for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+          if (board2048[i][j] === 0) movesAvailable = true;
+          if (j < boardSize - 1 && board2048[i][j] === board2048[i][j + 1]) movesAvailable = true;
+          if (i < boardSize - 1 && board2048[i][j] === board2048[i + 1][j]) movesAvailable = true;
+        }
+      }
+      if (!movesAvailable) {
+        document.getElementById("game2048Message").innerText = "Przegrałeś! Odśwież stronę, aby zagrać ponownie.";
+        gameOver2048 = true;
+      }
+    }
+
+    // Keyboard controls for 2048 (działa gdy widoczny jest panel gry 2048)
+    document.addEventListener("keydown", function(e) {
+      if (game2048.classList.contains("active") && !gameOver2048) {
+        switch(e.key) {
+          case "ArrowLeft": moveLeft2048(); break;
+          case "ArrowRight": moveRight2048(); break;
+          case "ArrowUp": moveUp2048(); break;
+          case "ArrowDown": moveDown2048(); break;
+        }
+      }
+    });
+
+    // Onscreen controls for 2048
+    document.getElementById("btn2048-up").addEventListener("click", moveUp2048);
+    document.getElementById("btn2048-down").addEventListener("click", moveDown2048);
+    document.getElementById("btn2048-left").addEventListener("click", moveLeft2048);
+    document.getElementById("btn2048-right").addEventListener("click", moveRight2048);
+
+    // Tworzenie planszy 2048
+    function create2048Board() {
+      const boardContainer = document.getElementById("game2048Board");
+      boardContainer.innerHTML = "";
+      for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+          const cell = document.createElement("div");
+          cell.className = "cell cell-0";
+          cell.id = `cell-${i}-${j}`;
+          boardContainer.appendChild(cell);
+        }
+      }
+    }
+
+    create2048Board();
   </script>
 </body>
 </html>

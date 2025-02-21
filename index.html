@@ -11,89 +11,120 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #282c34;
-            color: white;
+            background-color: #4CAF50; /* Zielone tło */
             font-family: Arial, sans-serif;
-            margin: 0;
-        }
-        canvas {
-            border: 2px solid #61dafb;
-            background-color: #fff;
+            color: white;
         }
         h1 {
-            margin: 10px;
-            font-size: 2em;
-            color: #61dafb;
+            margin-bottom: 20px;
+        }
+        canvas {
+            border: 5px solid #000;
+            background-color: #FFF;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
         #controls {
-            margin-top: 10px;
+            margin-top: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
+        .control-row {
+            display: flex;
+            justify-content: center;
+        }
         .control {
             width: 60px;
             height: 60px;
-            background-color: #61dafb;
-            border: none;
-            border-radius: 10px;
+            background-color: #007BFF;
+            border: 1px solid #0056b3;
+            color: white;
+            font-size: 24px;
             text-align: center;
             line-height: 60px;
-            font-size: 24px;
-            color: black;
+            border-radius: 5px;
             cursor: pointer;
             margin: 5px;
-            transition: background-color 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, transform 0.3s;
         }
         .control:hover {
-            background-color: #21a1f1;
+            background-color: #0056b3;
+            transform: scale(1.1);
         }
-        .control-row {
-            display: flex;
+        .control:active {
+            background-color: #003f72;
         }
         #gameOver {
             display: none;
-            font-size: 1.5em;
-            margin-top: 20px;
-            color: #ff6347;
+            font-size: 24px;
+            color: red;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
-    <h1>Gra Snake</h1>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <h2 id="gameOver">Przegrałeś! Naciśnij "R", aby zagrać ponownie.</h2>
-    <div id="controls">
-        <div class="control-row">
-            <div class="control" onclick="changeDirection('UP')">↑</div>
-        </div>
-        <div class="control-row">
-            <div class="control" onclick="changeDirection('LEFT')">←</div>
-            <div class="control" onclick="changeDirection('DOWN')">↓</div>
-            <div class="control" onclick="changeDirection('RIGHT')">→</div>
+    <div class="container">
+        <h1>Gra Snake</h1>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <h2 id="gameOver">Przegrałeś! Naciśnij "R", aby zagrać ponownie.</h2>
+        <div id="controls">
+            <div class="control-row">
+                <div class="control" onclick="changeDirection('UP')">↑</div>
+            </div>
+            <div class="control-row">
+                <div class="control" onclick="changeDirection('LEFT')">←</div>
+                <div class="control" onclick="changeDirection('DOWN')">↓</div>
+                <div class="control" onclick="changeDirection('RIGHT')">→</div>
+            </div>
         </div>
     </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
         const box = 20;
         let snake = [{ x: box * 5, y: box * 5 }];
-        let direction = '';
+        let direction = 'RIGHT';
         let food = spawnFood();
-        let score = 0;
         let gameOver = false;
 
+        // Obsługuje zarówno klawiaturę, jak i przyciski dotykowe
         document.addEventListener('keydown', (event) => {
-            if (!gameOver) changeDirection(event.key.replace('Arrow', ''));
-            if (gameOver && event.key.toLowerCase() === 'r') restartGame();
+            if (!gameOver) {
+                switch (event.key) {
+                    case 'ArrowUp':
+                        if (direction !== 'DOWN') direction = 'UP';
+                        break;
+                    case 'ArrowDown':
+                        if (direction !== 'UP') direction = 'DOWN';
+                        break;
+                    case 'ArrowLeft':
+                        if (direction !== 'RIGHT') direction = 'LEFT';
+                        break;
+                    case 'ArrowRight':
+                        if (direction !== 'LEFT') direction = 'RIGHT';
+                        break;
+                    case 'r':
+                        restartGame();
+                        break;
+                }
+            }
         });
 
         function changeDirection(dir) {
-            if (dir === 'Up' && direction !== 'DOWN') direction = 'UP';
-            if (dir === 'Down' && direction !== 'UP') direction = 'DOWN';
-            if (dir === 'Left' && direction !== 'RIGHT') direction = 'LEFT';
-            if (dir === 'Right' && direction !== 'LEFT') direction = 'RIGHT';
+            if (!gameOver) {
+                if (dir === 'UP' && direction !== 'DOWN') direction = 'UP';
+                if (dir === 'DOWN' && direction !== 'UP') direction = 'DOWN';
+                if (dir === 'LEFT' && direction !== 'RIGHT') direction = 'LEFT';
+                if (dir === 'RIGHT' && direction !== 'LEFT') direction = 'RIGHT';
+            }
         }
 
         function spawnFood() {
@@ -107,38 +138,43 @@
             if (gameOver) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Rysowanie węża
             for (let i = 0; i < snake.length; i++) {
-                ctx.fillStyle = (i === 0) ? '#228B22' : '#90EE90';
+                ctx.fillStyle = (i === 0) ? 'green' : 'lightgreen';
                 ctx.fillRect(snake[i].x, snake[i].y, box, box);
-                ctx.strokeStyle = '#006400';
+                ctx.strokeStyle = 'darkgreen';
                 ctx.strokeRect(snake[i].x, snake[i].y, box, box);
             }
 
-            ctx.fillStyle = '#FF4500';
+            // Rysowanie jedzenia
+            ctx.fillStyle = 'red';
             ctx.fillRect(food.x, food.y, box, box);
 
-            const headX = snake[0].x;
-            const headY = snake[0].y;
+            // Poruszanie wężem
+            let headX = snake[0].x;
+            let headY = snake[0].y;
 
             if (headX === food.x && headY === food.y) {
-                score++;
                 food = spawnFood();
             } else {
                 snake.pop();
             }
 
-            let newHead;
-            if (direction === 'LEFT') newHead = { x: headX - box, y: headY };
-            if (direction === 'UP') newHead = { x: headX, y: headY - box };
-            if (direction === 'RIGHT') newHead = { x: headX + box, y: headY };
-            if (direction === 'DOWN') newHead = { x: headX, y: headY + box };
+            if (direction === 'LEFT') headX -= box;
+            if (direction === 'UP') headY -= box;
+            if (direction === 'RIGHT') headX += box;
+            if (direction === 'DOWN') headY += box;
+
+            const newHead = { x: headX, y: headY };
 
             if (collision(newHead)) {
                 gameOver = true;
                 document.getElementById('gameOver').style.display = 'block';
+            } else {
+                snake.unshift(newHead);
             }
 
-            snake.unshift(newHead);
             requestAnimationFrame(draw);
         }
 
@@ -152,9 +188,8 @@
 
         function restartGame() {
             snake = [{ x: box * 5, y: box * 5 }];
-            direction = '';
+            direction = 'RIGHT';
             food = spawnFood();
-            score = 0;
             gameOver = false;
             document.getElementById('gameOver').style.display = 'none';
             draw();
